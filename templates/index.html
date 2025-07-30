@@ -1,0 +1,212 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AES-256 Encryption/Decryption</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>AES-256 Web Tool | أداة التشفير AES-256</h1>
+    
+    <!-- Language Toggle -->
+    <div class="language-toggle">
+        <button id="lang-en" class="lang-btn active">English</button>
+        <button id="lang-ar" class="lang-btn">العربية</button>
+    </div>
+    
+    <!-- English Instructions -->
+    <div class="info-box" id="instructions-en">
+        <h3>Instructions:</h3>
+        <ul>
+            <li><strong>⚠️ IMPORTANT:</strong> Text input must be at least <strong>16 bytes</strong> long (minimum one AES block)</li>
+            <li><strong>Encryption:</strong> Enter at least 16 bytes of plaintext, a 32-character key, select mode, and click Encrypt</li>
+            <li><strong>Decryption:</strong> Enter Base64 ciphertext, the same 32-character key used for encryption, select the same mode, and click Decrypt</li>
+            <li><strong>ECB Mode:</strong> No IV required (⚠️ less secure, for educational purposes)</li>
+            <li><strong>CBC/CFB/OFB/CTR Modes:</strong> Require a 16-character IV/Nonce (more secure)</li>
+            <li><strong>Example Inputs:</strong> "Hello World!!!!!" (16 bytes), "This is a longer message for AES encryption" (43 bytes), "مرحبا بالعالم" (Arabic text)</li>
+            <li><strong>Automatic Padding:</strong> PKCS7 padding is automatically applied for block modes when needed</li>
+        </ul>
+    </div>
+    
+    <!-- Arabic Instructions -->
+    <div class="info-box" id="instructions-ar" style="display:none;" dir="rtl">
+        <h3>التعليمات:</h3>
+        <ul>
+            <li><strong>⚠️ مهم جداً:</strong> يجب أن يكون النص المدخل <strong>16 بايت على الأقل</strong> (كحد أدنى كتلة AES واحدة)</li>
+            <li><strong>التشفير:</strong> أدخل 16 بايت على الأقل من النص الأصلي، مفتاح من 32 حرف، اختر النمط، واضغط تشفير</li>
+            <li><strong>فك التشفير:</strong> أدخل النص المشفر بصيغة Base64، نفس المفتاح المستخدم في التشفير، نفس النمط، واضغط فك التشفير</li>
+            <li><strong>نمط ECB:</strong> لا يحتاج IV (⚠️ أقل أماناً، للأغراض التعليمية فقط)</li>
+            <li><strong>أنماط CBC/CFB/OFB/CTR:</strong> تحتاج IV/Nonce من 16 حرف (أكثر أماناً)</li>
+            <li><strong>أمثلة للمدخلات:</strong> "مرحبا بالعالم!!!" (16 بايت)، "هذه رسالة أطول لتشفير AES" (نص أطول)، "Hello World!!!!!" (16 بايت إنجليزي)</li>
+            <li><strong>حشو تلقائي:</strong> يتم تطبيق حشو PKCS7 تلقائياً للأنماط الكتلية عند الحاجة</li>
+        </ul>
+    </div>
+    
+    <form id="aes-form">
+        <!-- Text Input with Language Labels -->
+        <div id="text-label-en">
+            <label>Text (Minimum 16 bytes - Plaintext for encryption or Base64 ciphertext for decryption):</label>
+        </div>
+        <div id="text-label-ar" style="display:none;" dir="rtl">
+            <label>النص (16 بايت كحد أدنى - النص الأصلي للتشفير أو النص المشفر بصيغة Base64 لفك التشفير):</label>
+        </div>
+        <textarea name="text" rows="4" cols="50" required maxlength="200" id="text-input"></textarea><br>
+        <small id="text-counter-en">Current length: <span id="text-length">0</span> bytes (minimum 16) | Characters: <span id="text-chars">0</span></small>
+        <small id="text-counter-ar" style="display:none;" dir="rtl">الطول الحالي: <span id="text-length-ar">0</span> بايت (الحد الأدنى 16) | الأحرف: <span id="text-chars-ar">0</span></small><br><br>
+
+        <!-- Key Input with Language Labels -->
+        <div id="key-label-en">
+            <label>Key (exactly 32 characters = 256-bit):</label>
+        </div>
+        <div id="key-label-ar" style="display:none;" dir="rtl">
+            <label>المفتاح (32 حرف بالضبط = 256-بت):</label>
+        </div>
+        <input type="text" name="key" maxlength="32" required id="key-input"><br>
+        <small id="key-counter-en">Current length: <span id="key-length">0</span>/32</small>
+        <small id="key-counter-ar" style="display:none;" dir="rtl">الطول الحالي: <span id="key-length-ar">0</span>/32</small><br><br>
+
+        <!-- Mode Selection with Language Labels -->
+        <div id="mode-label-en">
+            <label>Mode:</label>
+        </div>
+        <div id="mode-label-ar" style="display:none;" dir="rtl">
+            <label>النمط:</label>
+        </div>
+        <select name="mode" id="mode-select">
+            <option value="ECB" data-en="ECB (Electronic Codebook)" data-ar="ECB (الكتاب الرمزي الإلكتروني)">ECB</option>
+            <option value="CBC" data-en="CBC (Cipher Block Chaining)" data-ar="CBC (تسلسل كتل التشفير)">CBC</option>
+            <option value="CFB" data-en="CFB (Cipher Feedback)" data-ar="CFB (تغذية راجعة للتشفير)">CFB</option>
+            <option value="OFB" data-en="OFB (Output Feedback)" data-ar="OFB (تغذية راجعة للمخرجات)">OFB</option>
+            <option value="CTR" data-en="CTR (Counter Mode)" data-ar="CTR (نمط العداد)">CTR</option>
+        </select><br><br>
+
+        <!-- IV Section with Language Labels -->
+        <div id="iv-section" style="display:none;">
+            <div id="iv-label-en">
+                <label id="iv-label">IV/Nonce (exactly 16 characters):</label>
+            </div>
+            <div id="iv-label-ar" style="display:none;" dir="rtl">
+                <label>IV/Nonce (16 حرف بالضبط):</label>
+            </div>
+            <input type="text" name="iv" maxlength="16" id="iv-input"><br>
+            <small id="iv-counter-en">Current length: <span id="iv-length">0</span>/16</small>
+            <small id="iv-counter-ar" style="display:none;" dir="rtl">الطول الحالي: <span id="iv-length-ar">0</span>/16</small><br><br>
+        </div>
+
+        <!-- Buttons with Language Labels -->
+        <div id="buttons-en">
+            <button type="submit" name="action" value="encrypt">🔒 Encrypt</button>
+            <button type="submit" name="action" value="decrypt">🔓 Decrypt</button>
+        </div>
+        <div id="buttons-ar" style="display:none;" dir="rtl">
+            <button type="submit" name="action" value="encrypt">🔒 تشفير</button>
+            <button type="submit" name="action" value="decrypt">🔓 فك التشفير</button>
+        </div>
+    </form>
+
+    <div id="result"></div>
+    
+    <!-- View Toggle Buttons -->
+    <div id="view-controls" style="display:none;">
+        <div class="view-toggle" id="view-toggle-en">
+            <button id="flowchart-btn" class="toggle-btn active">📊 Flowchart View</button>
+            <button id="steps-btn" class="toggle-btn">📋 Steps View</button>
+        </div>
+        <div class="view-toggle" id="view-toggle-ar" style="display:none;" dir="rtl">
+            <button id="flowchart-btn-ar" class="toggle-btn active">📊 عرض المخطط التدفقي</button>
+            <button id="steps-btn-ar" class="toggle-btn">📋 عرض الخطوات</button>
+        </div>
+    </div>
+    
+    <!-- Flowchart Container -->
+    <div id="flowchart-container" style="display:none;">
+        <h2 id="flowchart-title-en">AES Process Flowchart</h2>
+        <h2 id="flowchart-title-ar" style="display:none;" dir="rtl">مخطط تدفق عملية AES</h2>
+        
+        <div id="flowchart">
+            <!-- Input Stage -->
+            <div class="flow-stage" id="stage-input">
+                <div class="stage-header" id="stage-input-header-en">📝 Input Stage</div>
+                <div class="stage-header" id="stage-input-header-ar" style="display:none;" dir="rtl">📝 مرحلة الإدخال</div>
+                <div class="stage-content">
+                    <div class="flow-box input-box">
+                        <div class="box-title" id="input-box-title-en">Plaintext/Ciphertext</div>
+                        <div class="box-title" id="input-box-title-ar" style="display:none;" dir="rtl">النص الأصلي/المشفر</div>
+                        <div class="box-content" id="input-text">-</div>
+                    </div>
+                    <div class="flow-arrow">↓</div>
+                </div>
+            </div>
+
+            <!-- Key Preparation Stage -->
+            <div class="flow-stage" id="stage-key">
+                <div class="stage-header" id="stage-key-header-en">🔑 Key Preparation</div>
+                <div class="stage-header" id="stage-key-header-ar" style="display:none;" dir="rtl">🔑 تحضير المفتاح</div>
+                <div class="stage-content">
+                    <div class="flow-box key-box">
+                        <div class="box-title" id="key-box-title-en">256-bit Key</div>
+                        <div class="box-title" id="key-box-title-ar" style="display:none;" dir="rtl">مفتاح 256-بت</div>
+                        <div class="box-content" id="key-display">-</div>
+                    </div>
+                    <div class="flow-arrow">↓</div>
+                </div>
+            </div>
+
+            <!-- Mode Setup Stage -->
+            <div class="flow-stage" id="stage-mode">
+                <div class="stage-header" id="stage-mode-header-en">⚙️ Mode Setup</div>
+                <div class="stage-header" id="stage-mode-header-ar" style="display:none;" dir="rtl">⚙️ إعداد النمط</div>
+                <div class="stage-content">
+                    <div class="flow-row">
+                        <div class="flow-box mode-box">
+                            <div class="box-title" id="mode-box-title-en">Encryption Mode</div>
+                            <div class="box-title" id="mode-box-title-ar" style="display:none;" dir="rtl">نمط التشفير</div>
+                            <div class="box-content" id="mode-display">-</div>
+                        </div>
+                        <div class="flow-box iv-box" id="iv-display-box" style="display:none;">
+                            <div class="box-title" id="iv-box-title-en">Initialization Vector</div>
+                            <div class="box-title" id="iv-box-title-ar" style="display:none;" dir="rtl">متجه التهيئة</div>
+                            <div class="box-content" id="iv-display">-</div>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">↓</div>
+                </div>
+            </div>
+
+            <!-- Processing Stage -->
+            <div class="flow-stage" id="stage-processing">
+                <div class="stage-header" id="stage-processing-header-en">🔄 AES Processing</div>
+                <div class="stage-header" id="stage-processing-header-ar" style="display:none;" dir="rtl">🔄 معالجة AES</div>
+                <div class="stage-content">
+                    <div id="blocks-container">
+                        <!-- Dynamic blocks will be added here -->
+                    </div>
+                    <div class="flow-arrow">↓</div>
+                </div>
+            </div>
+
+            <!-- Output Stage -->
+            <div class="flow-stage" id="stage-output">
+                <div class="stage-header" id="stage-output-header-en">📤 Output Stage</div>
+                <div class="stage-header" id="stage-output-header-ar" style="display:none;" dir="rtl">📤 مرحلة الإخراج</div>
+                <div class="stage-content">
+                    <div class="flow-box output-box">
+                        <div class="box-title" id="output-box-title-en">Final Result</div>
+                        <div class="box-title" id="output-box-title-ar" style="display:none;" dir="rtl">النتيجة النهائية</div>
+                        <div class="box-content" id="output-text">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="animation"></div>
+    <a id="download-link" href="/download" style="display:none">
+        <span id="download-text-en">Download Xmind File</span>
+        <span id="download-text-ar" style="display:none;">تحميل ملف Xmind</span>
+    </a>
+
+    <script src="/static/aes.js"></script>
+</body>
+</html>
